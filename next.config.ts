@@ -3,18 +3,14 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  experimental: {
-    // Enable turbo for both dev and build
-    turbo: {
-      rules: {
-        // Include the default rules
-        // This ensures compatibility with existing webpack configurations
-        include: ['**/*'],
-      },
-      // Resolve modules using Node.js resolution
-      resolveAlias: {
-        // Add any custom aliases here if needed
-      }
+  turbopack: {
+    rules: {
+      // Include the default rules
+      // This ensures compatibility with existing webpack configurations
+      include: ['**/*'],
+    },
+    resolveAlias: {
+      // Add any custom aliases here if needed
     }
   },
   webpack: (config, { isServer }) => {
