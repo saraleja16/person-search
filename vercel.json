@@ -1,7 +1,13 @@
 {
     "version": 2,
     "buildCommand": "npm run build",
+    "devCommand": "npm run dev",
     "installCommand": "npm install",
-    "framework": "nextjs"
+    "framework": "nextjs",
+    "outputDirectory": ".next",
+    "env": {
+        "PRISMA_GENERATE": "true",
+        "PRISMA_CLI_BINARY_TARGETS": "native,debian-openssl-3.0.x"
+    }
 }
 
