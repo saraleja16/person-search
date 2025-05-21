@@ -5,11 +5,35 @@ import Link from 'next/link';
 import { Search, Moon, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { Button } from "@/components/ui/button";
-import { useSession, signIn, signOut } from "next-auth/react"
+import { useSession, signIn, signOut } from "next-auth/react";
+import { useState } from 'react';
 
 export default function Navbar() {
   const { theme, setTheme } = useTheme();
-  const { data: session } = useSession()
+  const { data: session, status } = useSession();
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSignIn = async () => {
+    try {
+      setIsLoading(true);
+      await signIn('google');
+    } catch (error) {
+      console.error('Sign in error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSignOut = async () => {
+    try {
+      setIsLoading(true);
+      await signOut();
+    } catch (error) {
+      console.error('Sign out error:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <nav className="bg-background shadow-md">
@@ -39,15 +63,25 @@ export default function Navbar() {
             </Button>
           </div>
           <div className="flex items-center gap-4">
-            {session ? (
+            {status === 'loading' || isLoading ? (
+              <Button disabled variant="outline">Loading...</Button>
+            ) : session ? (
               <div className="flex items-center gap-4">
-                <span>{session.user?.email}</span>
-                <Button variant="outline" onClick={() => signOut()}>
+                <span className="text-sm text-foreground">{session.user?.email}</span>
+                <Button 
+                  variant="outline" 
+                  onClick={handleSignOut}
+                  disabled={isLoading}
+                >
                   Sign out
                 </Button>
               </div>
             ) : (
-              <Button variant="default" onClick={() => signIn('google')}>
+              <Button 
+                variant="default" 
+                onClick={handleSignIn}
+                disabled={isLoading}
+              >
                 Sign in with Google
               </Button>
             )}

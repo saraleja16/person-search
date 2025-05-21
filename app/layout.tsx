@@ -4,7 +4,6 @@ import { Toaster } from "@/components/ui/toaster";
 import "./globals.css";
 import Navbar from "./components/navbar";
 import Footer from "./components/footer";
-import { ThemeProvider } from "@/components/theme-provider";
 import Providers from "./providers"
 
 const geistSans = Geist({
@@ -28,22 +27,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" suppressHydrationWarning={true}>
+    <html lang="en" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}>
         <Providers>
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="system"
-            enableSystem
-            disableTransitionOnChange
-          >
-            <Navbar />
-            <main className="flex-grow">
-              {children}
-            </main>
-            <Toaster />
-            <Footer />
-          </ThemeProvider>
+          <Navbar />
+          <main className="flex-grow">
+            {children}
+          </main>
+          <Toaster />
+          <Footer />
         </Providers>
       </body>
     </html>
