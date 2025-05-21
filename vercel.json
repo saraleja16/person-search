@@ -1,13 +1,16 @@
 {
+    "name": "person-search",
     "version": 2,
     "buildCommand": "npm run build",
     "devCommand": "npm run dev",
     "installCommand": "npm install",
-    "framework": "nextjs",
     "outputDirectory": ".next",
+    "framework": "nextjs",
+    "rootDirectory": "person-search",
     "env": {
         "PRISMA_GENERATE": "true",
-        "PRISMA_CLI_BINARY_TARGETS": "native,debian-openssl-3.0.x"
+        "PRISMA_CLI_BINARY_TARGETS": "native,debian-openssl-3.0.x",
+        "NEXTAUTH_URL": "${VERCEL_URL}"
     }
 }
 

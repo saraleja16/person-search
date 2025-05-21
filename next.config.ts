@@ -3,16 +3,15 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  turbopack: {
-    rules: {
-      // Include the default rules
-      // This ensures compatibility with existing webpack configurations
-      include: ['**/*'],
-    },
-    resolveAlias: {
-      // Add any custom aliases here if needed
+  // Only enable turbopack in development
+  ...(process.env.NODE_ENV === 'development' ? {
+    turbopack: {
+      rules: {
+        include: ['**/*'],
+      },
+      resolveAlias: {}
     }
-  },
+  } : {}),
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
