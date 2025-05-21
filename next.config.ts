@@ -3,15 +3,22 @@ import path from 'path';
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
-  // Only enable turbopack in development
-  ...(process.env.NODE_ENV === 'development' ? {
+  // Production-specific settings
+  ...(process.env.NODE_ENV === 'production' ? {
+    output: 'standalone',
+    distDir: '.next'
+  } : {
+    // Development-specific settings
     turbopack: {
       rules: {
         include: ['**/*'],
       },
       resolveAlias: {}
     }
-  } : {}),
+  }),
+  images: {
+    unoptimized: true
+  },
   webpack: (config, { isServer }) => {
     config.resolve.alias = {
       ...config.resolve.alias,
