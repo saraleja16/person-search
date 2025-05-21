@@ -16,7 +16,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ user, account, profile }) {
+    async signIn({ account }) {
       if (account?.provider === "google") {
         return true
       }
@@ -29,7 +29,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       else if (new URL(url).origin === baseUrl) return url
       return baseUrl
     },
-    async session({ session, user, token }) {
+    async session({ session }) {
       return session
     }
   },
