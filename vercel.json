@@ -10,7 +10,6 @@
         "PRISMA_GENERATE": "true",
         "PRISMA_CLI_BINARY_TARGETS": "native,debian-openssl-3.0.x",
         "NEXTAUTH_URL": "https://${VERCEL_URL}",
-        "NEXTAUTH_SECRET": "${NEXTAUTH_SECRET}",
         "VERCEL_URL": "${VERCEL_URL}"
     }
 }
