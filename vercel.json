@@ -6,7 +6,6 @@
     "installCommand": "npm install",
     "outputDirectory": ".next",
     "framework": "nextjs",
-    "rootDirectory": "person-search",
     "env": {
         "PRISMA_GENERATE": "true",
         "PRISMA_CLI_BINARY_TARGETS": "native,debian-openssl-3.0.x",
