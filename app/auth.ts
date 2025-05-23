@@ -21,12 +21,16 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
   callbacks: {
     async signIn({ account }: { account?: Account | null }) {
+      console.log('SignIn callback - Start')
+      console.log('Account:', JSON.stringify(account, null, 2))
+      
       try {
         if (!account) {
           console.error("No account data received during sign in")
           return false
         }
         if (account.provider === "google") {
+          console.log('SignIn successful - Google provider')
           return true
         }
         console.error(`Unsupported provider: ${account.provider}`)
@@ -34,38 +38,58 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       } catch (error) {
         console.error("Error in signIn callback:", error)
         return false
+      } finally {
+        console.log('SignIn callback - End')
       }
     },
     async redirect({ url, baseUrl }) {
+      console.log('Redirect callback - Start')
+      console.log('URL:', url)
+      console.log('Base URL:', baseUrl)
+      
       try {
         // Default to baseUrl if URL is not provided
-        if (!url) return baseUrl
+        if (!url) {
+          console.log('No URL provided, using baseUrl:', baseUrl)
+          return baseUrl
+        }
         
         // Handle relative URLs
         if (url.startsWith("/")) {
-          return `${baseUrl}${url}`
+          const redirectUrl = `${baseUrl}${url}`
+          console.log('Relative URL, redirecting to:', redirectUrl)
+          return redirectUrl
         }
         
         // Handle absolute URLs
         const urlObj = new URL(url)
         if (urlObj.origin === baseUrl) {
+          console.log('Absolute URL matches baseUrl, redirecting to:', url)
           return url
         }
         
-        // Default to baseUrl for security
+        console.log('URL origin mismatch, defaulting to baseUrl')
         return baseUrl
       } catch (error) {
         console.error("Error in redirect callback:", error)
         return baseUrl
+      } finally {
+        console.log('Redirect callback - End')
       }
     },
     async session({ session }): Promise<Session | DefaultSession> {
+      console.log('Session callback - Start')
+      console.log('Session:', JSON.stringify(session, null, 2))
+      
       try {
+        console.log('Returning session')
         return session
       } catch (error) {
         console.error("Error in session callback:", error)
-        // Return empty session instead of null
+        console.log('Returning default session')
         return {} as DefaultSession
+      } finally {
+        console.log('Session callback - End')
       }
     }
   },
@@ -73,6 +97,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error'
   },
-  debug: process.env.NODE_ENV === 'development',
+  debug: true, // Enable debug mode to see more detailed logs
+  logger: {
+    error(code, ...message) {
+      console.error(code, ...message)
+    },
+    warn(code, ...message) {
+      console.warn(code, ...message)
+    },
+    debug(code, ...message) {
+      console.debug(code, ...message)
+    }
+  },
   secret: process.env.NEXTAUTH_SECRET
 } satisfies NextAuthConfig)
