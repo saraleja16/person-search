@@ -48,6 +48,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       console.log('Base URL:', baseUrl)
       
       try {
+        // Allow both production and development URLs
+        const allowedBaseUrls = [productionURL, developmentURL]
+        if (!allowedBaseUrls.includes(baseUrl)) {
+          console.warn(`Unexpected baseUrl: ${baseUrl}, expected one of:`, allowedBaseUrls)
+        }
+
         // Default to baseUrl if URL is not provided
         if (!url) {
           console.log('No URL provided, using baseUrl:', baseUrl)
@@ -63,12 +69,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         
         // Handle absolute URLs
         const urlObj = new URL(url)
-        if (urlObj.origin === baseUrl) {
-          console.log('Absolute URL matches baseUrl, redirecting to:', url)
+        if (allowedBaseUrls.includes(urlObj.origin)) {
+          console.log('URL origin matches allowed URLs, redirecting to:', url)
           return url
         }
         
-        console.log('URL origin mismatch, defaulting to baseUrl')
+        console.log('URL origin not allowed, defaulting to baseUrl')
         return baseUrl
       } catch (error) {
         console.error("Error in redirect callback:", error)
