@@ -1,6 +1,6 @@
 import NextAuth, { type NextAuthConfig } from "next-auth"
 import Google from "@auth/core/providers/google"
-import type { Account, Session, DefaultSession } from "next-auth"
+import type { Account, Session, DefaultSession, Profile } from "next-auth"
 
 if (!process.env.NEXTAUTH_SECRET) {
   throw new Error('NEXTAUTH_SECRET is not set in environment variables')
@@ -27,7 +27,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     }),
   ],
   callbacks: {
-    async signIn({ account, profile }: { account?: Account | null; profile?: any }) {
+    async signIn({ account, profile }: { account?: Account | null; profile?: Profile }) {
       try {
         if (!account || !profile) {
           console.error("Missing account or profile data")
