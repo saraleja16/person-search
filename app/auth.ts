@@ -2,6 +2,14 @@ import NextAuth, { type NextAuthConfig } from "next-auth"
 import Google from "@auth/core/providers/google"
 import type { Account, Session, DefaultSession } from "next-auth"
 
+if (!process.env.NEXTAUTH_SECRET) {
+  throw new Error('NEXTAUTH_SECRET is not set in environment variables')
+}
+
+if (process.env.NEXTAUTH_SECRET.length < 32) {
+  throw new Error('NEXTAUTH_SECRET should be at least 32 characters long')
+}
+
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -9,10 +17,11 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
       authorization: {
         params: {
-          scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
-          prompt: "select_account",
-          access_type: "online",
-          response_type: "code"
+          scope: "openid email profile",
+          access_type: "offline",
+          include_granted_scopes: true,
+          response_type: "code",
+          prompt: "consent"
         }
       }
     }),
@@ -79,6 +88,7 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error'
   },
-  debug: process.env.NODE_ENV === 'development',
-  secret: process.env.NEXTAUTH_SECRET
+  debug: true,
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true
 } satisfies NextAuthConfig)
