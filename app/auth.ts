@@ -2,9 +2,6 @@ import NextAuth, { type NextAuthConfig } from "next-auth"
 import Google from "@auth/core/providers/google"
 import type { Account, Session, DefaultSession } from "next-auth"
 
-const productionURL = 'https://person-search-plum.vercel.app'
-const developmentURL = 'http://localhost:3000'
-
 export const { handlers, signIn, signOut, auth } = NextAuth({
   providers: [
     Google({
@@ -12,10 +9,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       clientSecret: process.env.GOOGLE_CLIENT_SECRET ?? '',
       authorization: {
         params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-          scope: "openid email profile"
+          scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email",
+          prompt: "select_account",
+          access_type: "online",
+          response_type: "code"
         }
       }
     }),
@@ -25,12 +22,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       try {
         if (!account || !profile) {
           console.error("Missing account or profile data")
-          return false
-        }
-        
-        // Verify email is verified
-        if (!profile.email_verified) {
-          console.error("Email not verified")
           return false
         }
 
@@ -47,41 +38,26 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
     async redirect({ url, baseUrl }) {
       try {
-        // Strict URL validation for security
+        // Default to baseUrl if URL is not provided
         if (!url) return baseUrl
         
-        // Only allow specific origins
-        const allowedOrigins = [productionURL, developmentURL]
-        const currentOrigin = allowedOrigins.find(origin => baseUrl.startsWith(origin))
-        
-        if (!currentOrigin) {
-          console.error(`Invalid base URL: ${baseUrl}`)
-          throw new Error("Invalid base URL")
-        }
-
         // Handle relative URLs
         if (url.startsWith("/")) {
-          const finalUrl = `${currentOrigin}${url}`
-          // Validate the constructed URL
-          try {
-            new URL(finalUrl)
-            return finalUrl
-          } catch {
-            return currentOrigin
-          }
+          return `${baseUrl}${url}`
         }
         
-        // Handle absolute URLs - strict validation
+        // Handle absolute URLs - only allow same origin
         try {
           const urlObj = new URL(url)
-          if (allowedOrigins.includes(urlObj.origin)) {
+          const baseUrlObj = new URL(baseUrl)
+          if (urlObj.origin === baseUrlObj.origin) {
             return url
           }
         } catch {
           console.error("Invalid redirect URL")
         }
         
-        return currentOrigin
+        return baseUrl
       } catch (error) {
         console.error("Error in redirect callback:", error)
         return baseUrl
@@ -90,7 +66,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async session({ session }): Promise<Session | DefaultSession> {
       try {
         if (!session) {
-          console.error("No session data")
           return {} as DefaultSession
         }
         return session
@@ -104,17 +79,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error'
   },
-  secret: process.env.NEXTAUTH_SECRET,
-  trustHost: true, // Enable CSRF protection
-  cookies: {
-    sessionToken: {
-      name: `__Secure-next-auth.session-token`,
-      options: {
-        httpOnly: true,
-        sameSite: 'lax',
-        path: '/',
-        secure: true
-      }
-    }
-  }
+  debug: process.env.NODE_ENV === 'development',
+  secret: process.env.NEXTAUTH_SECRET
 } satisfies NextAuthConfig)
