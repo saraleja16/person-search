@@ -14,88 +14,89 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
+          response_type: "code",
+          scope: "openid email profile"
         }
       }
     }),
   ],
   callbacks: {
-    async signIn({ account }: { account?: Account | null }) {
-      console.log('SignIn callback - Start')
-      console.log('Account:', JSON.stringify(account, null, 2))
-      
+    async signIn({ account, profile }: { account?: Account | null; profile?: any }) {
       try {
-        if (!account) {
-          console.error("No account data received during sign in")
+        if (!account || !profile) {
+          console.error("Missing account or profile data")
           return false
         }
+        
+        // Verify email is verified
+        if (!profile.email_verified) {
+          console.error("Email not verified")
+          return false
+        }
+
         if (account.provider === "google") {
-          console.log('SignIn successful - Google provider')
           return true
         }
+        
         console.error(`Unsupported provider: ${account.provider}`)
         return false
       } catch (error) {
         console.error("Error in signIn callback:", error)
         return false
-      } finally {
-        console.log('SignIn callback - End')
       }
     },
     async redirect({ url, baseUrl }) {
-      console.log('Redirect callback - Start')
-      console.log('URL:', url)
-      console.log('Base URL:', baseUrl)
-      
       try {
-        // Allow both production and development URLs
-        const allowedBaseUrls = [productionURL, developmentURL]
-        if (!allowedBaseUrls.includes(baseUrl)) {
-          console.warn(`Unexpected baseUrl: ${baseUrl}, expected one of:`, allowedBaseUrls)
+        // Strict URL validation for security
+        if (!url) return baseUrl
+        
+        // Only allow specific origins
+        const allowedOrigins = [productionURL, developmentURL]
+        const currentOrigin = allowedOrigins.find(origin => baseUrl.startsWith(origin))
+        
+        if (!currentOrigin) {
+          console.error(`Invalid base URL: ${baseUrl}`)
+          throw new Error("Invalid base URL")
         }
 
-        // Default to baseUrl if URL is not provided
-        if (!url) {
-          console.log('No URL provided, using baseUrl:', baseUrl)
-          return baseUrl
-        }
-        
         // Handle relative URLs
         if (url.startsWith("/")) {
-          const redirectUrl = `${baseUrl}${url}`
-          console.log('Relative URL, redirecting to:', redirectUrl)
-          return redirectUrl
+          const finalUrl = `${currentOrigin}${url}`
+          // Validate the constructed URL
+          try {
+            new URL(finalUrl)
+            return finalUrl
+          } catch {
+            return currentOrigin
+          }
         }
         
-        // Handle absolute URLs
-        const urlObj = new URL(url)
-        if (allowedBaseUrls.includes(urlObj.origin)) {
-          console.log('URL origin matches allowed URLs, redirecting to:', url)
-          return url
+        // Handle absolute URLs - strict validation
+        try {
+          const urlObj = new URL(url)
+          if (allowedOrigins.includes(urlObj.origin)) {
+            return url
+          }
+        } catch {
+          console.error("Invalid redirect URL")
         }
         
-        console.log('URL origin not allowed, defaulting to baseUrl')
-        return baseUrl
+        return currentOrigin
       } catch (error) {
         console.error("Error in redirect callback:", error)
         return baseUrl
-      } finally {
-        console.log('Redirect callback - End')
       }
     },
     async session({ session }): Promise<Session | DefaultSession> {
-      console.log('Session callback - Start')
-      console.log('Session:', JSON.stringify(session, null, 2))
-      
       try {
-        console.log('Returning session')
+        if (!session) {
+          console.error("No session data")
+          return {} as DefaultSession
+        }
         return session
       } catch (error) {
         console.error("Error in session callback:", error)
-        console.log('Returning default session')
         return {} as DefaultSession
-      } finally {
-        console.log('Session callback - End')
       }
     }
   },
@@ -103,17 +104,17 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     signIn: '/auth/signin',
     error: '/auth/error'
   },
-  debug: true, // Enable debug mode to see more detailed logs
-  logger: {
-    error(code, ...message) {
-      console.error(code, ...message)
-    },
-    warn(code, ...message) {
-      console.warn(code, ...message)
-    },
-    debug(code, ...message) {
-      console.debug(code, ...message)
+  secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true, // Enable CSRF protection
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: 'lax',
+        path: '/',
+        secure: true
+      }
     }
-  },
-  secret: process.env.NEXTAUTH_SECRET
+  }
 } satisfies NextAuthConfig)
